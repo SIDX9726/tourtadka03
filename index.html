@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripTadka</title>
+    
+    <!-- External Dependencies (Fonts and Icons) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- CSS is embedded directly in the HTML file -->
+    <style>
+        /* --- General Setup & Variables --- */
+        :root {
+            --primary-color: #0077b6;
+            --secondary-color: #00b4d8;
+            --background-color: #f0f8ff;
+            --text-color: #333;
+            --white-color: #ffffff;
+            --light-gray: #f4f4f4;
+            --user-message-bg: #00b4d8;
+            --model-message-bg: #e9ecef;
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('https://source.unsplash.com/random/1920x1080/?travel,landscape');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .page-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Header --- */
+        header {
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        header .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        /* --- Main Chat Container --- */
+        .chat-container {
+            flex-grow: 1;
+            width: 100%;
+            max-width: 800px;
+            margin: 1rem auto;
+            display: flex;
+            flex-direction: column;
+            background: var(--white-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* --- Chat Window & Messages --- */
+        .chat-window {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 0.75rem;
+            max-width: 80%;
+            align-items: flex-end;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 1.0s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-icon {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            padding-bottom: 5px;
+        }
+
+        .message-content {
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            line-height: 1.5;
+        }
+
+        .message-content p {
+            margin: 0;
+        }
+
+        .model-message {
+            align-self: flex-start;
+        }
+        .model-message .message-content {
+            background-color: var(--model-message-bg);
+            color: var(--text-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .user-message .message-content {
+            background-color: var(--user-message-bg);
+            color: var(--white-color);
+            border-bottom-right-radius: 4px;
+        }
+        .user-message .message-icon {
+            color: var(--secondary-color);
+        }
+
+        /* --- Loading Indicator --- */
+        .loading-indicator {
+            display: flex;
+            justify-content: center;
+            padding: 0.5rem;
+            gap: 0.5rem;
+        }
+        .loading-indicator .dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .loading-indicator .dot:nth-child(1) { animation-delay: -0.50s; }
+        .loading-indicator .dot:nth-child(2) { animation-delay: -0.25s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        /* --- Input Form --- */
+        .chat-input-form {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #eee;
+            background: #f9f9f9;
+        }
+
+        .chat-input-form input {
+            flex-grow: 1;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            padding: 0.75rem 1.25rem;
+            font-size: 1rem;
+            font-family: var(--font-family);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .chat-input-form input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.2);
+        }
+
+        .chat-input-form button {
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-left: 0.75rem;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .chat-input-form button:hover {
+            background-color: var(--secondary-color);
+            transform: scale(1.1);
+        }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 850px) {
+            body {
+                align-items: flex-start;
+                background-attachment: scroll;
+            }
+            .page-container {
+                height: auto;
+                min-height: 100vh;
+            }
+            .chat-container {
+                margin: 0;
+                border-radius: 0;
+                box-shadow: none;
+                height: calc(100vh - 120px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <header>
+            <div class="logo">
+                <i class="fa-solid fa-plane-departure"></i>
+                <h1>TripTadka</h1>
+            </div>
+            <p>
+“Thoda spice, thoda slice – trip planning Indian style!”</p>
+        </header>
+
+        <main class="chat-container">
+            <div class="chat-window" id="chat-window">
+                <!-- Initial Welcome Message -->
+                <div class="message model-message">
+                    <i class="fa-solid fa-robot message-icon"></i>
+                    <div class="message-content">
+                        <p>
+Namaste! Main hoon aapka smart travel saathi. Poochhiye kuch bhi – yatra, hotels, tickets, ya khaas jagah ke raaz. Aap bas bolo, hum planning kar denge jhatpat!**
+</p>
+                    </div>
+                </div>
+            </div>
+            <div class="loading-indicator" id="loading-indicator" style="display: none;">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            <form class="chat-input-form" id="chat-form">
+                <input 
+                    type="text" 
+                    id="user-input" 
+                    placeholder="Ask about Anywhere, book a flight,car,train,cruise ..." 
+                    autocomplete="off"
+                    required
+                >
+                <button type="submit" aria-label="Send Message">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </main>
+        
+        <footer>
+            <p>© TripTadka. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript is embedded directly in the HTML file -->
+    <script type="module">
+        // Import the Google AI SDK from a CDN
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        // =========================================================================
+        // === ⚠️ CRITICAL: REPLACE WITH YOUR API KEY & READ THE WARNING ABOVE ⚠️ ===
+        // =========================================================================
+        const API_KEY = "AIzaSyAkyJWVrXBAYqY6I1Df5ZQ1HIwDs0lqKV8"; 
+        // =========================================================================
+
+        // --- Get references to the HTML elements ---
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const chatWindow = document.getElementById('chat-window');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        
+        // --- Initialize the Google AI Model ---
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.0-flash",
+            systemInstruction: `
+                You are a smart and responsive Tourist Management System designed to 
+                assist users with end-to-end travel planning. Your role is to provide 
+                accurate and up-to-date information about various tourist destinations,
+                including famous landmarks, cultural sites, local events, and hidden gems. 
+                Help users book flights, hotels, transport, and activities based on their 
+                preferences, budget, and schedule. Be polite, informative, and proactive 
+                in suggesting itineraries and travel tips. You must also handle queries
+                related to safety, local cuisine, language assistance, and travel regulations. 
+                Always aim to enhance the user's travel experience and support them throughout 
+                their journey in a helpful manner.
+            `,
+        });
+
+        // This will store the full conversation history
+        const chatHistory = [];
+
+        /**
+         * Adds a message to the chat window UI.
+         * @param {string} role - The role of the message sender ('user' or 'model').
+         * @param {string} text - The content of the message.
+         */
+        function addMessage(role, text) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', `${role}-message`);
+
+            const iconClass = role === 'user' ? 'fa-solid fa-user' : 'fa-solid fa-robot';
+            
+            // Basic sanitization to prevent HTML injection from the AI's response
+            const sanitizedText = text.replace(/</g, "<").replace(/>/g, ">");
+
+            messageElement.innerHTML = `
+                <i class="${iconClass} message-icon"></i>
+                <div class="message-content">
+                    <p>${sanitizedText}</p>
+                </div>
+            `;
+
+            chatWindow.appendChild(messageElement);
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Auto-scroll
+        }
+        
+        /**
+         * Main function to handle form submission and AI interaction.
+         * @param {Event} e - The form submission event.
+         */
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const messageText = userInput.value.trim();
+            if (!messageText) return;
+
+            // 1. Display user's message immediately
+            addMessage('user', messageText);
+            
+            // 2. Add user message to the internal history for the AI
+            chatHistory.push({ role: 'user', parts: [{ text: messageText }] });
+            
+            // 3. Clear the input and show loading indicator
+            userInput.value = '';
+            loadingIndicator.style.display = 'flex';
+
+            try {
+                // 4. Start a chat session with the full history
+                const chat = model.startChat({
+                    history: chatHistory,
+                });
+
+                // 5. Send the new message to the AI
+                const result = await chat.sendMessage(messageText);
+                const response = await result.response;
+                const aiResponse = response.text();
+
+                // 6. Display AI's response
+                addMessage('model', aiResponse);
+                
+                // 7. Add AI response to the internal history
+                chatHistory.push({ role: 'model', parts: [{ text: aiResponse }] });
+
+            } catch (error) {
+                console.error("AI Chat Error:", error);
+                addMessage('model', 'Oops! Something went wrong. Please check your API key and try again.');
+            } finally {
+                // 8. Hide the loading indicator
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // Attach the event listener to the form
+        chatForm.addEventListener('submit', handleFormSubmit);
+
+    </script>
+</body>
+</html>
